@@ -1,17 +1,21 @@
 import { useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  Image,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import Logo from "../components/Logo";
+import { useTheme } from "../theme/theme";
+
+const SPLASH_STAY_MS = 2200;
 
 export default function LoadingScreen() {
   const router = useRouter();
-  const fade = useRef(new Animated.Value(0)).current;
+  const { colors } = useTheme();
+  const [fade] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     Animated.timing(fade, {
@@ -20,26 +24,22 @@ export default function LoadingScreen() {
       useNativeDriver: true,
     }).start();
 
-    const timer = setTimeout(() => router.replace("/menu"), 2500);
+    const timer = setTimeout(() => router.replace("/menu"), SPLASH_STAY_MS);
     return () => clearTimeout(timer);
-  }, []);
+  }, [fade, router]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.primaryDeep }]}>
       <Animated.View style={{ opacity: fade, alignItems: "center" }}>
-        <Image
-          source={require("../assets/images/logo.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <Logo height={86} style={styles.logo} />
         <Text style={styles.title}>Hyderabadi Chai & Grill</Text>
-        <Text style={styles.tagline}>
+        <Text style={[styles.tagline, { color: colors.accentSoft }]}>
           A taste of Hyderabad in every bite and sip
         </Text>
       </Animated.View>
       <ActivityIndicator
         size="large"
-        color="#D98324"
+        color={colors.accent}
         style={{ marginTop: 40 }}
       />
     </View>
@@ -47,23 +47,17 @@ export default function LoadingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#3B1F0F",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-  },
-  logo: { width: 160, height: 160, marginBottom: 16 },
+  container: { flex: 1, alignItems: "center", justifyContent: "center" },
+  logo: { borderRadius: 20, marginBottom: 28 },
   title: {
-    fontSize: 26,
+    fontFamily: "RozhaOne",
+    fontSize: 34,
     fontWeight: "700",
     color: "#FFF6E5",
     textAlign: "center",
   },
   tagline: {
     fontSize: 14,
-    color: "#E8C99B",
     marginTop: 8,
     textAlign: "center",
   },

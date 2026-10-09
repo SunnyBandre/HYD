@@ -1,30 +1,58 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+} from "react-native-reanimated";
 import { useCart } from "../context/CartContext";
+import { useTheme } from "../theme/theme";
+import Logo from "./Logo";
 
 export default function Header() {
   const router = useRouter();
   const { count } = useCart();
+  const { colors } = useTheme();
+  const badgeScale = useSharedValue(1);
+
+  // Little bounce on the cart badge whenever the count changes.
+  useEffect(() => {
+    if (count > 0) {
+      badgeScale.value = withSequence(
+        withSpring(1.35, { damping: 8 }),
+        withSpring(1, { damping: 8 }),
+      );
+    }
+  }, [badgeScale, count]);
+
+  const badgeStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: badgeScale.value }],
+  }));
 
   return (
-    <View style={styles.header}>
-      <Image
-        source={require("../assets/images/logo.png")}
-        style={styles.logo}
-        resizeMode="contain"
-      />
+    <View
+      style={[
+        styles.header,
+        { backgroundColor: colors.background, borderBottomColor: colors.border },
+      ]}
+    >
+      <Logo height={36} />
 
       <Pressable
         onPress={() => router.push("/cart")}
         style={styles.cartButton}
         hitSlop={10}
       >
-        <Ionicons name="cart-outline" size={30} color="#3B1F0F" />
+        <Ionicons name="cart-outline" size={30} color={colors.text} />
         {count > 0 && (
-          <View style={styles.badge}>
+          <Animated.View
+            style={[styles.badge, { backgroundColor: colors.accent }, badgeStyle]}
+          >
             <Text style={styles.badgeText}>{count > 99 ? "99+" : count}</Text>
-          </View>
+          </Animated.View>
         )}
       </Pressable>
     </View>
@@ -38,11 +66,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: "#FFF6E5",
     borderBottomWidth: 1,
-    borderBottomColor: "#F1DFC0",
   },
-  logo: { width: 120, height: 44 },
+  logo: { borderRadius: 12, marginRight: 8 },
   cartButton: { padding: 4 },
   badge: {
     position: "absolute",
@@ -52,7 +78,6 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     paddingHorizontal: 5,
-    backgroundColor: "#D98324",
     alignItems: "center",
     justifyContent: "center",
   },
